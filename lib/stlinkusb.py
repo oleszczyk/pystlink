@@ -150,3 +150,6 @@ class StlinkUsbConnector():
                 stderr=subprocess.PIPE,
             )
             p.wait()
+            
+    def release(self):
+        self._dev.reset()
