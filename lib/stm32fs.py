@@ -125,7 +125,11 @@ class Flash():
         self._stlink.get_debugreg32(Flash.FLASH_CR_REG)
         self._stlink.get_debugreg32(Flash.FLASH_CR_REG)
         # programing locked
-        if self._stlink.get_debugreg32(Flash.FLASH_CR_REG) & Flash.FLASH_CR_LOCK_BIT:
+        #if self._stlink.get_debugreg32(Flash.FLASH_CR_REG) & Flash.FLASH_CR_LOCK_BIT:
+        time.sleep(0.1)
+        while self._stlink.get_debugreg32(Flash.FLASH_CR_REG) & Flash.FLASH_CR_LOCK_BIT:
+            print("flash is locked:  try to unlock flash")
+            time.sleep(0.1)
             # unlock keys
             self._stlink.set_debugreg32(Flash.FLASH_KEYR_REG, 0x45670123)
             self._stlink.set_debugreg32(Flash.FLASH_KEYR_REG, 0xcdef89ab)
@@ -233,10 +237,8 @@ class Stm32FS(lib.stm32.Stm32):
             data.extend([0xff] * (4 - len(data) % 4))
         flash = Flash(self, self._stlink, self._dbg)
         if erase:
-            if erase_sizes:
-                flash.erase_sectors(self.FLASH_START, erase_sizes, addr, len(data))
-            else:
-                flash.erase_all()
+            flash.erase_all()
+        flash.unlock()
         self._dbg.bargraph_start('Writing FLASH', value_min=addr, value_max=addr + len(data))
         flash.init_write(Stm32FS.SRAM_START)
         while(data):
